@@ -20,10 +20,10 @@ class FastCreditPortfolioIRB:
     def generate_all(self):
         """Generate complete portfolio with all risk metrics in one shot"""
 
-        self.df = pd.read_excel(r"C:\\Users\\RBoiani\\OneDrive - BDO Italia SPA\\Desktop\\Credit Risk\\Credit scoring models\\Credit Portfolio advanced IRB\\Banca_Sistema_dataset_imprese_classificato.xlsx")  # oppure pd.read_csv()
-        self.n = len(self.df)  # aggiorna n automaticamente in base al dataset
+        self.df = pd.read_excel(r"dataset\\_dataset_firms.xlsx") 
+        self.n = len(self.df)  
 
-        print(f"✅ Dataset caricato con {self.n} righe")
+        print(f"✅ Dataset uploaded con {self.n} righe")
         print(self.df.head())
 
         print("-" * 150)
@@ -40,7 +40,7 @@ class FastCreditPortfolioIRB:
                  'Healthcare': 0.8, 'Real Estate': 1.5, 'Utilities': 0.7})
             self.df[f'pit_pd_{scenario}'] = np.minimum(self.df['ttc_pd'] * adj * sector_adj, 0.99)
 
-        # Mostra solo alcune colonne per vedere i risultati
+        # Show some columns to see if the results are corrected
         print(portfolio.df[['rating', 'sector', 'ttc_pd', 'pit_pd_base', 'pit_pd_stress', 'pit_pd_severe']].head(10))
 
         print("-"*150)
@@ -52,7 +52,7 @@ class FastCreditPortfolioIRB:
             self.df['sector'].map(lgd_map) * np.random.normal(1, 0.15, self.n) + np.random.normal(0, 0.1, self.n), 0.05,
             0.95)
 
-        # Mostra solo settore e LGD, prime 10 righe
+        # visualize LGD
         print(portfolio.df[['sector', 'lgd']].head(10))
         print("-"*150)
 
@@ -61,7 +61,7 @@ class FastCreditPortfolioIRB:
         self.df['correlation'] = (0.12 * (1 - np.exp(-50 * self.df['pit_pd_base'])) / (1 - np.exp(-50)) + 0.04 * (
                     1 - np.exp(-35 * self.df['pit_pd_base'])) / (1 - np.exp(-35)) * size_mult)
 
-        # Mostra le prime 10 righe con size, PD base e correlazione
+        # Show size, PD e correlation
         print(portfolio.df[['size', 'pit_pd_base', 'correlation']].head(10))
         print("-"*150)
 
@@ -73,8 +73,8 @@ class FastCreditPortfolioIRB:
             norm_inv_999 = stats.norm.ppf(0.999)
             correlation_factor = np.sqrt(self.df['correlation'] / (1 - self.df['correlation']))
 
-            # ===== PRINT 1: Valori intermedi =====
-            print(f"\n=== {scenario.upper()} SCENARIO: Valori intermedi ===")
+            # ===== PRINT 1: Intermidiate values =====
+            print(f"\n=== {scenario.upper()} SCENARIO: Values ===")
             print(pd.DataFrame({
                 'pit_pd': self.df[pd_col].head(10),
                 'norm_inv_pd': pd.Series(norm_inv_pd).head(10),
@@ -104,7 +104,7 @@ class FastCreditPortfolioIRB:
             self.df[f'capital_{scenario}'] = self.df[f'rwa_{scenario}'] * 0.08  # 8% of RWA
 
             # ===== PRINT 3: RWA e Capital =====
-            print(f"\n=== {scenario.upper()} SCENARIO: RWA e Capital ===")
+            print(f"\n=== {scenario.upper()} SCENARIO: RWA and Capital ===")
             print(pd.DataFrame({
                 'ead': self.df['ead'].head(10),
                 'capital_ratio': self.df[f'capital_ratio_{scenario}'].head(10),
@@ -124,7 +124,7 @@ class FastCreditPortfolioIRB:
                                       self.df['pit_pd_base'] * self.df['lgd'] * self.df['ead'],
                                       0)
         print("\n=== ECL 12M (Stage 1) ===")
-        print(self.df[['ecl_12m']].head(10))  # stage sarà 1 o temporaneamente vuoto, ma vediamo la colonna
+        print(self.df[['ecl_12m']].head(10)) 
 
         print("-"*150)
 
@@ -153,7 +153,7 @@ class FastCreditPortfolioIRB:
             scenario_mult = {'base': 1.0, 'stress': 2.0, 'severe': 3.5}[scenario]
             self.df[f'provisions_{scenario}'] = self.df['total_provisions'] * scenario_mult
 
-        # ===== PRINT PROVISIONS PER SCENARIO =====
+        # ===== PRINT PROVISIONS SCENARIO =====
         print("\n=== Provisions per Scenario ===")
         print(self.df[['stage', 'provisions_base', 'provisions_stress', 'provisions_severe']].head(10))
 
@@ -174,7 +174,7 @@ class FastCreditPortfolioIRB:
         defaults = asset_vals < stats.norm.ppf(self.df['pit_pd_base'].values)
         losses = (defaults * self.df['lgd'].values * self.df['ead'].values).sum(axis=1)
 
-        # --- PRINT dei risultati principali ---
+        # --- PRINT principal results ---
         print("\n=== Monte Carlo Simulation Results ===")
         print(f"Expected Loss (EL)     : {losses.mean():,.0f}")
         print(f"VaR 95%               : {np.percentile(losses, 95):,.0f}")
@@ -481,6 +481,7 @@ print(f"💰 Stress Provisions: Base={portfolio.df['provisions_base'].sum()/1e6:
 
 print("\n✅ COMPLETE - All 20 charts + ECL Stages + Capital Ratios + Provisions!")
 print("⚡ Full Basel III/IFRS 9 compliance | Production ready | <10 seconds execution")
+
 
 
 
